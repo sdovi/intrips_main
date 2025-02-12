@@ -1,0 +1,122 @@
+{% extends 'custom_admin/base.html' %}
+{% block content %}
+<h2>📅 Список бронирований</h2>
+
+<a href="{% url 'archive_list' %}" class="btn btn-secondary mb-3">📂 Перейти в архив</a>
+
+<!-- Таблица бронирований -->
+<table class="table custom-table">
+    <thead>
+        <tr>
+            <th>Услуга</th>
+            <th>Комната</th>
+            <th>Гости</th>
+            <th>Дата</th>
+            <th>Время</th>
+            <th>Сотрудник</th>
+            <th>Комментарий</th>
+            <th>Статус</th>
+            <th>Общая сумма</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for booking in bookings %}
+        <tr class="table-row">
+            <td class="service-column">
+                <img src="/static/img/img_in_work.png" alt="Service Icon" class="service-icon">
+                {{ booking.service_name }}
+            </td>
+            <td>{{ booking.room_number }}</td>
+            <td>{{ booking.guest_count }}</td>
+            <td>{{ booking.date }}</td>
+            <td>{{ booking.start_time }} - {{ booking.end_time|default:"--:--" }}</td>
+            <td>{{ booking.employee.full_name }}</td>
+            <td>{{ booking.comment|default:"-" }}</td>
+            <td>
+                <span class="badge 
+                    {% if booking.status.name == 'Выполнено' %}bg-success
+                    {% elif booking.status.name == 'В работе' %}bg-warning
+                    {% elif booking.status.name == 'Отмена' %}bg-danger
+                    {% else %}bg-secondary
+                    {% endif %}">
+                    {{ booking.status.name }}
+                </span>
+            </td>
+            <td class="text-end"><strong>{{ booking.total_price }} ₽</strong></td>
+            <td>
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton{{ booking.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                        Изменить статус
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ booking.id }}">
+                        {% for status in statuses %}
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="updateStatus({{ booking.id }}, {{ status.id }})">
+                                {{ status.name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Встроенные стили -->
+<style>
+    th, td {
+        padding: 14px 18px;
+        text-align: left;
+    }
+
+    .table-row {
+        border-bottom: 1px solid #ddd;
+    }
+
+    /* Выравнивание иконки с текстом */
+    .service-column {
+        display: flex;
+        align-items: center;
+    }
+
+    /* Удаление рамок и стилизация dropdown */
+    .dropdown-menu {
+        padding: 0;
+        border-radius: 5px;
+    }
+    
+    .service-icon {
+        margin-right: 8px;
+    }
+</style>
+
+<script>
+    function updateStatus(bookingId, statusId) {
+        fetch(`/update_booking_status/${bookingId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}' 
+            },
+            body: JSON.stringify({ status_id: statusId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Статус успешно обновлен!");
+                location.reload();
+            } else {
+                alert("Ошибка при обновлении статуса.");
+            }
+        })
+        .catch(error => {
+            console.error("Ошибка:", error);
+        });
+    }
+</script>
+{% endblock %}

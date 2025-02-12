@@ -1,0 +1,127 @@
+{% extends 'custom_admin/base.html' %} {% block content %}
+<h2 style="text-align: center; color: black">Календарь</h2>
+<div id="calendar"></div>
+
+<link
+  href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css"
+  rel="stylesheet"
+/>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/locales/ru.js"></script>
+
+<style>
+  .fc-event-title {
+    white-space: normal;
+    word-wrap: break-word;
+    font-size: 12px;
+  }
+
+  /* Управление верхней панелью FullCalendar */
+  .fc-toolbar.fc-header-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Добавление отступов между кнопками */
+  .fc-toolbar-chunk > .fc-button-group > button {
+    margin: 0 10px;
+  }
+
+  /* Отступы между группами кнопок */
+  .fc-toolbar-chunk {
+    padding: 0 15px;
+  }
+  .fc-daygrid-event {
+    display: block;
+  }
+  #calendar {
+    max-width: 100%; /* Установите нужную ширину */
+    height: 700px;
+    margin: 0 auto; /* Центрирует календарь */
+    font-size: 0.85em; /* Уменьшает общий текст календаря */
+  }
+</style>
+
+<script>
+  function getRandomColor() {
+    const colors = [
+      "blue",
+      "red",
+      "green",
+      "orange",
+      "purple",
+      "pink",
+      "lightblue",
+      "yellow",
+      "coral",
+      "teal",
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const calendarEl = document.getElementById("calendar");
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      locale: "ru",
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek,timeGridDay",
+      },
+      events: function (fetchInfo, successCallback, failureCallback) {
+        // Получаем данные о задачах и заказах
+        Promise.all([
+          fetch("https://intrips.site/api/tasks/").then((response) =>
+            response.json()
+          ),
+          fetch("https://intrips.site/api/bookings/").then((response) =>
+            response.json()
+          ),
+        ])
+          .then(([tasks, bookings]) => {
+            const events = [];
+
+            // Обработка задач
+            tasks.forEach((task) => {
+              events.push({
+                id: "task-" + task.id,
+                title: `Задача: ${task.description}`,
+                start: task.date + "T" + (task.time || "00:00:00"),
+                end: task.end_time ? task.date + "T" + task.end_time : null,
+                color: getRandomColor(),
+              });
+            });
+
+            // Обработка заказов со статусом "В работе" (status = 1)
+            bookings
+              .filter((booking) => booking.status === 1)
+              .forEach((booking) => {
+                events.push({
+                  id: "booking-" + booking.id,
+                  title: `Заказ: ${booking.service_name} (Комната: ${booking.room_number})`,
+                  start:
+                    booking.date + "T" + (booking.start_time || "00:00:00"),
+                  end: booking.end_time
+                    ? booking.date + "T" + booking.end_time
+                    : null,
+                  color: getRandomColor(),
+                });
+              });
+
+            successCallback(events); // Отправляем события в календарь
+          })
+          .catch((error) => {
+            console.error("Ошибка при получении данных:", error);
+            failureCallback(error);
+          });
+      },
+    });
+
+    calendar.render();
+  });
+</script>
+
+{% endblock %}

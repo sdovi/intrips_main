@@ -1,0 +1,38 @@
+{% extends 'custom_admin/base.html' %} {% block content %}
+<h2>Список сотрудников</h2>
+<a href="{% url 'employee_create' %}" class="btn btn-primary"
+  >Добавить сотрудника</a
+>
+<table class="table">
+  <tr>
+    <th>Цвет</th>
+    <th>ФИО</th>
+    <th>Телефон</th>
+    <th>Телеграм</th>
+    <th>Должность</th>
+    <th>Действия</th>
+  </tr>
+  {% for employee in employees %}
+  <tr>
+    <td style="background-color: {{ employee.color }};"></td>
+    <td>{{ employee.full_name }}</td>
+    <td>{{ employee.phone_number }}</td>
+    <td>{{ employee.telegram_user }}</td>
+    <td>{{ employee.position }}</td>
+    <td>
+      <a href="{% url 'employee_edit' employee.id %}" class="btn btn-warning"
+        >✏️</a
+      >
+      <form
+        action="{% url 'employee_delete' employee.id %}"
+        method="post"
+        style="display: inline"
+      >
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">❌</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

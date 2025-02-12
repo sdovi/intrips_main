@@ -1,0 +1,66 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block extra_head %}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    .delete-task-container {
+      max-width: 500px;
+      margin: 50px auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 5px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .delete-task-container h2 {
+      margin-bottom: 20px;
+    }
+    .delete-task-container p {
+      margin-bottom: 30px;
+      font-size: 16px;
+      color: #333;
+    }
+    .delete-task-container button {
+      background-color: #d9534f;
+      border: none;
+      color: #fff;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .delete-task-container button:hover {
+      background-color: #c9302c;
+    }
+    .delete-task-container a {
+      display: inline-block;
+      margin-top: 15px;
+      text-decoration: none;
+      color: #5bc0de;
+      font-size: 14px;
+    }
+    .delete-task-container a:hover {
+      text-decoration: underline;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="delete-task-container">
+    <h2>Удаление задачи</h2>
+    <p>Вы уверены, что хотите удалить "{{ task.description }}"?</p>
+    
+    <form method="POST">
+      {% csrf_token %}
+      <button type="submit">Удалить</button>
+    </form>
+    
+    <a href="{% url 'task_list' %}">Отмена</a>
+  </div>
+{% endblock %}

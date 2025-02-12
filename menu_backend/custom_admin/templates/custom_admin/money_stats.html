@@ -1,0 +1,93 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<h1>Статистика доходов</h1>
+
+<!-- Форма выбора месяца -->
+<form method="GET" class="mb-5">
+  <label for="month">Выберите месяц:</label>
+  <select id="month" name="month">
+    <option value="">Все месяцы</option>
+    {% for month in months %}
+      <option value="{{ month }}" {% if month == selected_month %}selected{% endif %}>{{ month }}</option>
+    {% endfor %}
+    
+  </select>
+
+  <button  style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: #fff; 
+  text-decoration: none; font-size: 16px; font-weight: bold; border-radius: 5px; 
+  transition: background-color 0.3s;"
+onmouseover="this.style.backgroundColor='#0056b3'"
+onmouseout="this.style.backgroundColor='#007bff'" type="submit" class="px-4 py-2 bg-blue-500 text-white rounded">Фильтровать</button>
+</form>
+
+<!-- Проверяем, есть ли данные -->
+{% if filtered_data %}
+  <!-- Контейнер для графика -->
+  <div class="w-96 mx-auto">
+    <canvas id="moneyChart"></canvas>
+  </div>
+
+  <!-- Таблица с данными -->
+  <table class="w-full border-collapse border border-gray-300 mt-5">
+    <thead class="bg-gray-200">
+      <tr>
+        <th class="border border-gray-300 px-3 py-2">Название услуги</th>
+        <th class="border border-gray-300 px-3 py-2">Дата</th>
+        <th class="border border-gray-300 px-3 py-2">Общая сумма</th>
+        <th class="border border-gray-300 px-3 py-2">Статус</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for booking in filtered_data %}
+        <tr>
+          <td class="border border-gray-300 px-3 py-2">{{ booking.service_name }}</td>
+          <td class="border border-gray-300 px-3 py-2">{{ booking.date }}</td>
+          <td class="border border-gray-300 px-3 py-2">{{ booking.total_price }} ₽</td>
+          <td class="border border-gray-300 px-3 py-2">✅ Выполнено</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <!-- Сообщение, если данных нет -->
+  <p class="text-red-500 font-bold text-center mt-5">❌ Нет данных за выбранный месяц!</p>
+{% endif %}
+
+<!-- Подключаем Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const moneyData = JSON.parse('{{ stats_json|escapejs }}');
+  const ctx = document.getElementById('moneyChart').getContext('2d');
+
+  if (Object.keys(moneyData).length > 0) {
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(moneyData),
+        datasets: [{
+          data: Object.values(moneyData).map(value => parseFloat(value.replace(" ₽", ""))), // Убираем ₽ перед обработкой
+          backgroundColor: ['#FF6384', '#36A2EB', '#4BC0C0', '#FFCE56', '#9966FF']
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            callbacks: {
+              label: function (tooltipItem) {
+                return tooltipItem.raw.toFixed(2) + ' ₽';
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,133 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-center  vh-80">
+    <div class="card shadow-sm p-4" style="width: 460px; border-radius: 20px;">
+        <h4 class="fw-bold">Сотрудник</h4>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Блок выбора цвета -->
+            <div class="color-picker">
+                <label>Цвет</label>
+                <div class="color-switch">
+                    <button type="button" id="colorButton" class="color-circle"></button>
+                    <select id="colorSelect" name="color" class="form-select">
+                        {% for value, name in form.color.field.choices %}
+                            <option value="{{ value }}" data-color="{{ value }}" {% if form.color.value == value %}selected{% endif %}>
+                                {{ name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+
+
+            <label for="full_name">Ф.И.О.</label>
+            <input type="text" name="full_name" value="{{ form.full_name.value|default:'' }}">
+
+            <label for="phone_number">Номер телефона</label>
+            <input type="text" name="phone_number" value="{{ form.phone_number.value|default:'' }}">
+
+            {% comment %} <label for="telegram_user">Telegram</label>
+            <input type="text" name="telegram_user" value="{{ form.telegram_user.value|default:'' }}"> {% endcomment %}
+
+            <label for="position">Должность</label>
+            <input type="text" name="position" value="{{ form.position.value|default:'' }}">
+
+            <label for="user_id_tg">Telegram ID</label>
+            <input type="number" name="user_id_tg" value="{{ form.user_id_tg.value|default:'' }}">
+
+            <button type="submit" class="submit-button">Добавить</button>
+        </form>
+    </div>
+</div>
+
+<!-- Стили -->
+<style>
+    /* Общий стиль */
+    input, select {
+        width: 100%;
+        padding: 12px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        font-size: 14px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Кнопка "Добавить" */
+    .submit-button {
+        width: 100%;
+        background-color: #007bff;
+        color: white;
+        padding: 12px;
+        font-size: 16px;
+        border: none;
+        border-radius: 10px;
+        margin-top: 15px;
+        cursor: pointer;
+    }
+
+    /* Блок выбора цвета */
+    .color-picker {
+        margin-bottom: 10px;
+    }
+
+    .color-switch {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .color-circle {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid #ccc;
+        cursor: pointer;
+        background-color: red;
+    }
+
+    .form-select {
+        flex: 1;
+    }
+
+    /* Улучшение читаемости */
+    label {
+        font-size: 14px;
+        font-weight: 500;
+        display: block;
+        margin-top: 10px;
+    }
+
+    .text-muted {
+        font-size: 12px;
+    }
+</style>
+
+<!-- Скрипт для работы выбора цвета -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let colorSelect = document.getElementById("colorSelect");
+        let colorButton = document.getElementById("colorButton");
+
+        function updateColor() {
+            let selectedOption = colorSelect.options[colorSelect.selectedIndex];
+            let color = selectedOption.getAttribute("data-color");
+            colorButton.style.backgroundColor = color;
+        }
+
+        colorSelect.addEventListener("change", updateColor);
+        updateColor(); // Обновляем цвет при загрузке
+    });
+</script>
+
+{% endblock %}

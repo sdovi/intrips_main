@@ -1,0 +1,71 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<h1>Статистика продаж товаров</h1>
+
+<!-- График -->
+<div class="w-96 mx-auto">
+  <canvas id="productChart"></canvas>
+</div>
+
+<!-- Таблица с данными -->
+<table class="w-full border-collapse border border-gray-300 mt-5">
+  <thead class="bg-gray-200">
+    <tr>
+      <th class="border border-gray-300 px-3 py-2">Название товара</th>
+      <th class="border border-gray-300 px-3 py-2">Количество куплено</th>
+      <th class="border border-gray-300 px-3 py-2">Общая сумма продаж</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for name, data in products.items %}
+      <tr>
+        <td class="border border-gray-300 px-3 py-2">{{ name }}</td>
+        <td class="border border-gray-300 px-3 py-2">{{ data.total_quantity }}</td>
+        <td class="border border-gray-300 px-3 py-2">{{ data.total_sales }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+  
+</table>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const productData = JSON.parse('{{ product_stats_json|escapejs }}');
+  
+  const labels = Object.keys(productData);
+  const quantities = labels.map(label => productData[label].total_quantity);
+  const sales = labels.map(label => productData[label].total_sales);
+
+  const ctx = document.getElementById('productChart').getContext('2d');
+  
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Количество куплено',
+          data: quantities,
+          backgroundColor: '#36A2EB'
+        },
+        {
+          label: 'Общая сумма продаж',
+          data: sales,
+          backgroundColor: '#FF6384'
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+    <h2>✅ Заказ #{{ order.id }} подтверждён!</h2>
+    <p><strong>Бронирование создано:</strong> {{ booking.service_name }}</p>
+    <p><strong>Сотрудник:</strong> {{ booking.employee.full_name }}</p>
+    <p><strong>Дата:</strong> {{ booking.date }}</p>
+    <p><strong>Время начала:</strong> {{ booking.start_time }}</p>
+    <p><strong>Номер комнаты:</strong> {{ booking.room_number }}</p>
+    <p><strong>Общая сумма:</strong> {{ booking.total_price }} ₽</p>
+
+    <br>
+    <a href="{% url 'orders_list' %}">🔙 Вернуться к списку заказов</a>
+{% endblock %}

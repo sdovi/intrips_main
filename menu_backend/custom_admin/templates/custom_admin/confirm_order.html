@@ -1,0 +1,19 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+    <h2>Подтвердить заказ #{{ order.id }}</h2>
+    <p><strong>Название услуги:</strong> {{ order.items.0.name }}</p>
+    <p><strong>Номер комнаты:</strong> {{ order.room_number }}</p>
+    <p><strong>Дата:</strong> {{ order.date }}</p>
+    <p><strong>Время:</strong> {{ order.time }}</p>
+    <p><strong>Общая сумма:</strong> {{ order.total_price }} ₽</p>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Подтвердить заказ</button>
+    </form>
+
+    <br>
+    <a href="{% url 'orders_list' %}">🔙 Назад к заказам</a>
+{% endblock %}
