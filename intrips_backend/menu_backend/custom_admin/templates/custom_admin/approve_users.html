@@ -1,0 +1,30 @@
+{% extends 'custom_admin/base.html' %}
+{% block content %}
+<h2>Подтверждение пользователей</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Имя пользователя</th>
+            <th>Email</th>
+            <th>Дата регистрации</th>
+            <th>Действие</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pending_user in pending_users %}
+        <tr>
+            <td>{{ pending_user.user.username }}</td>
+            <td>{{ pending_user.user.email }}</td>
+            <td>{{ pending_user.created_at }}</td>
+            <td>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_id" value="{{ pending_user.user.id }}">
+                    <button type="submit" class="btn btn-success">Подтвердить</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+    <h2 class="page-title">📋 Заказы с сайта</h2>
+
+    <table class="styled-table mb-5 ">
+        <thead  class="orders__thead bg-black bg-dark">
+            <tr  class="orders__thead">
+                <th>ID</th>
+                <th>Дата</th>
+                <th>Время</th>
+                <th>Номер комнаты</th>
+                <th>Комментарии</th>
+                <th>Товары</th>
+                <th>Общая сумма</th>
+                <th>Дата создания</th>
+                <th>Статус</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for order in orders %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.date }}</td>
+                    <td>{{ order.time }}</td>
+                    <td>{{ order.room_number }}</td>
+                    <td>{{ order.comments }}</td>
+                    <td>
+                        <ul>
+                            {% for item in order.items %}
+                                <li>
+                                    <strong>{{ item.name }}</strong> (x{{ item.quantity }}) - <span class="price">{{ item.price }} ₽</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </td>
+                    <td class="total-price">{{ order.total_price }} ₽</td>
+                    <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                    <td class="status">{{ order.get_status_display }}</td>
+                    <td>
+                        {% if order.status == "new" %}
+                        <form action="{% url 'confirm_order' shop.website_url order.id %}" method="post" class="confirm-form">
+
+                            {% csrf_token %}
+                            <input type="hidden" name="shop" value="{{ shop.website_url }}">
+                            <select name="employee" required class="styled-select">
+                                <option value="" disabled selected>Выберите сотрудника</option>
+                                {% for employee in employees %}
+                                    <option value="{{ employee.id }}">{{ employee.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="confirm-btn">✅ Подтвердить</button>
+                        </form>
+                        
+                        
+                        
+                        {% else %}
+                            <span class="confirmed-status">✅ В работе</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="11" class="no-orders">Нет заказов</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

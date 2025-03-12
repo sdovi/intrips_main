@@ -1,0 +1,89 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<style>
+
+</style>
+
+<h1 class="text-2xl font-bold mb-4 text-center">📊 Статистика заказов</h1>
+
+<!-- Кнопка перехода на статистику по деньгам -->
+<div class="text-center mb-6">
+  <a href="{% url 'money_stats' shop.website_url %}" 
+     class="money-stats-button">
+    💰 Статистика по деньгам
+  </a>
+</div>
+
+<!-- Контейнер для графика -->
+<div class="flex justify-center mb-6">
+  <div class="w-80 md:w-96">
+    <canvas id="serviceChart"></canvas>
+  </div>
+</div>
+
+<!-- Таблица с данными -->
+<div class="overflow-x-auto">
+  <table class="w-full border border-gray-300 text-sm md:text-base">
+    <thead class="bg-gray-100 text-left">
+      <tr>
+        <th class="border px-4 py-2">Название услуги</th>
+        <th class="border px-4 py-2">Дата</th>
+        <th class="border px-4 py-2">Время начала</th>
+        <th class="border px-4 py-2">Время окончания</th>
+        <th class="border px-4 py-2">Количество гостей</th>
+        <th class="border px-4 py-2">Статус</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for booking in bookings %}
+      <tr class="hover:bg-gray-50">
+        <td class="border px-4 py-2">{{ booking.service_name }}</td>
+        <td class="border px-4 py-2">{{ booking.date }}</td>
+        <td class="border px-4 py-2">{{ booking.start_time }}</td>
+        <td class="border px-4 py-2">{{ booking.end_time|default:"—" }}</td>
+        <td class="border px-4 py-2 text-center">{{ booking.guest_count }}</td>
+        <td class="border px-4 py-2 font-semibold {% if booking.status_text == 'Выполнен' %}text-green-600{% elif booking.status_text == 'Отменен' %}text-red-600{% else %}text-yellow-600{% endif %}">
+          {{ booking.status_text }}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center py-4 text-gray-500">Нет данных для отображения</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Подключение Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const serviceData = JSON.parse('{{ stats_json|escapejs }}');
+    const ctx = document.getElementById('serviceChart').getContext('2d');
+
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: Object.keys(serviceData),
+        datasets: [{
+          data: Object.values(serviceData),
+          backgroundColor: ['#FF6384', '#36A2EB', '#4BC0C0'],
+          hoverOffset: 10
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom'
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+
+    {% load static %}
+    
+    <h2>Чаты магазина {{ shop.name }}</h2>
+
+    <div style="display: flex;">
+        <div class="sidebar" style="width: 250px; border-right: 1px solid #ddd; padding: 10px;">
+            <h3>Чаты</h3>
+            <ul class="user-list" style="list-style: none; padding: 0;">
+                {% for user in users %}
+                    <li style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;"
+                        onclick="location.href='{% url 'chat_admin_user' shop.website_url user.user_id %}'">
+                        👤 {{ user.user_id }}
+                    </li>
+                {% empty %}
+                    <li>Нет активных чатов</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="chat-container" style="flex-grow: 1; padding: 10px;">
+            {% if selected_user %}
+                <h3>Чат с пользователем {{ selected_user }}</h3>
+
+                <div id="chat-messages">
+                    {% for message in messages %}
+                        <div class="message-box {% if message.is_admin %}admin-message{% else %}client-message{% endif %}"
+                             style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; 
+                                    {% if message.is_admin %}background: #e6f7ff;{% else %}background: #f1f1f1;{% endif %}">
+                            <strong>{% if message.is_admin %}Админ{% else %}Клиент{% endif %}:</strong> {{ message.message }}
+                            <br><small>{{ message.timestamp }}</small>
+                        </div>
+                    {% empty %}
+                        <p>Сообщений нет</p>
+                    {% endfor %}
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <textarea name="message" rows="3" required></textarea>
+                    <br>
+                    <button type="submit">Отправить</button>
+                </form>
+            {% else %}
+                <p>Выберите пользователя, чтобы увидеть чат.</p>
+            {% endif %}
+        </div>
+    </div>

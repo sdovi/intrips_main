@@ -1,0 +1,65 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<h2>Список сотрудников: {{ shop.name }}</h2>
+<a href="{% url 'employee_create' shop.website_url %}" class="btn btn-primary">Добавить сотрудника</a>
+
+
+<table class="table">
+  <tr>
+    <th>Цвет</th>
+    <th>ФИО</th>
+    <th>Телефон</th>
+    <th>Телеграм id</th>
+    <th>Должность</th>
+    <th>Действия</th>
+  </tr>
+  {% for employee in employees %}
+  <tr>
+    <td class="color-cell">
+      <div class="color-circle" style="background-color: {{ employee.color }};"></div>
+    </td>
+    <td>{{ employee.full_name }}</td>
+    <td>{{ employee.phone_number }}</td>
+    <td>{{ employee.user_id_tg }}</td>
+    <td>
+      <span class="position-badge" style="background-color: {{ employee.color }};">
+        {{ employee.position }}
+      </span>
+    </td>
+    <td>
+      <a href="{% url 'employee_edit' shop.website_url employee.id %}" class="btn btn-warning">✏️</a>
+      <form action="{% url 'employee_delete' shop.website_url employee.id %}" method="post" style="display: inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">❌</button>
+      </form>
+      <a href="{% url 'send_message' shop.website_url employee.id %}" class="btn btn-info">📩 Отправить сообщение</a>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<style>
+  .color-cell {
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .color-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-block;
+    border: 2px solid #ccc;
+  }
+
+  .position-badge {
+    color: white;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    display: inline-block;
+  }
+</style>
+{% endblock %}

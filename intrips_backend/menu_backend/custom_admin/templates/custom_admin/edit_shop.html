@@ -1,0 +1,27 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+<h1>Редактирование магазина</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    <div>
+        <label for="{{ form.name.id_for_label }}">Название магазина:</label>
+        {{ form.name }}
+    </div>
+    
+    <div>
+        <label for="{{ form.website_url.id_for_label }}">Уникальный URL:</label>
+        {{ form.website_url }}
+    </div>
+    
+    
+    <div>
+        <label for="{{ form.tg_group_id.id_for_label }}">ID Telegram-группы:</label>
+        {{ form.tg_group_id }}
+    </div>
+
+    <button type="submit">Сохранить</button>
+</form>
+
+{% endblock %}

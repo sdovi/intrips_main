@@ -1,0 +1,46 @@
+{% extends 'custom_admin/base.html' %}
+{% block content %}
+<h2>Управление пользователями</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Имя</th>
+            <th>VK ID</th>
+            <th>Статус</th>
+            <th>Действие</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.get_full_name|default:user.username }}</td>
+            <td>
+                {% for social in user.social_auth.all %}
+                    {% if social.provider == "vk-oauth2" %}
+                        {{ social.uid }}
+                    {% endif %}
+                {% endfor %}
+            </td>
+            <td>
+                {% if user.is_confirmed %}
+                    <span class="badge bg-success">Подтверждён</span>
+                {% else %}
+                    <span class="badge bg-warning">Ожидает</span>
+                {% endif %}
+            </td>
+            <td>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                    {% if user.is_confirmed %}
+                        <button type="submit" name="action" value="revoke" class="btn btn-danger">Отключить</button>
+                    {% else %}
+                        <button type="submit" name="action" value="grant" class="btn btn-success">Включить</button>
+                    {% endif %}
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

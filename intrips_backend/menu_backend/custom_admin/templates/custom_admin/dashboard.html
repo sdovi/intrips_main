@@ -1,0 +1,12 @@
+{% extends "custom_admin/base.html" %}
+
+{% block content %}
+<h2>Админка магазина: {{ shop.name }}</h2>
+<p>URL: {{ shop.website_url }}</p>
+
+<ul>
+    <li><a href="{% url 'task_list' shop.website_url %}">Задачи</a></li>
+    <li><a href="{% url 'bookings_list' shop.website_url %}">Бронирования</a></li>
+    <li><a href="{% url 'employees_list' shop.website_url %}">Сотрудники</a></li>
+</ul>
+{% endblock %}

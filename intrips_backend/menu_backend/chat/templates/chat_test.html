@@ -1,0 +1,321 @@
+{% extends 'custom_admin/base.html' %}
+
+{% block content %}
+    {% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <style>
+        #unreadMessagesCount.hidden {
+            display: none;
+        }
+        
+        
+        @font-face {
+            font-family: 'TT Firs Neue Regular';
+            src: url('{% static "fonts/TT_Firs_Neue_Trial_Regular.ttf" %}') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        @font-face {
+            font-family: 'TT Firs Neue DemiBold';
+            src: url('{% static "fonts/TT_Firs_Neue_Trial_DemiBold.ttf" %}') format('truetype');
+            font-weight: bold;
+            font-style: normal;
+        }
+        
+        * {
+            font-family: 'TT Firs Neue DemiBold', sans-serif;
+        }
+
+
+
+
+@media (max-width: 768px) {
+    /* Чат-кнопка */
+    .chat-toggle {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 50%;
+        font-size: 18px;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        z-index: 1001;
+    }
+
+    /* Чат по умолчанию скрыт */
+    .chat-box {
+        position: fixed;
+        bottom: 80px;
+        right: 10px;
+        width: 90%;
+        max-width: 350px;
+        background: white;
+        padding: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        display: none;
+        z-index: 1000;
+    }
+
+    /* Показываем чат, когда активен */
+    .chat-box.active {
+        display: block;
+    }
+  
+}
+/* Градиенты */
+.blue { background: linear-gradient(45deg, #28a745, #a8e063); }
+.purple { background: linear-gradient(45deg, #6f42c1, #b23cf7); }
+.green { background: linear-gradient(45deg, #28a745, #a8e063); }
+
+/* Анимация градиента */
+@keyframes gradientAnimation {
+    0% { background-position: left; }
+    100% { background-position: right; }
+}
+
+
+    </style>    
+</head>
+
+<body class="bg-gray-100">
+    
+
+    
+ <!-- Основной контент - Чат -->
+ <div class="container mx-auto p-6">
+    <div class="bg-white rounded-lg shadow p-6">
+      <h1 class="text-2xl font-bold mb-4">Чат с пользователями</h1>
+      <button id="unanswered" class="bg-blue-500 text-white px-4 py-2 rounded">
+        Показать неотвеченные
+      </button>
+      <div id="messages" class="space-y-4 mt-4">
+        <!-- Сообщения будут загружаться сюда -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Форма отправки сообщений -->
+  <div class="fixed bottom-4 right-4 bg-white p-4 shadow-lg rounded-lg w-80">
+    <label for="userIdInput" class="block text-gray-700 font-bold mb-2">User ID:</label>
+    <input id="userIdInput" type="text" class="w-full px-4 py-2 border rounded mb-4" placeholder="Введите User ID" readonly />
+    <label for="messageInput" class="block text-gray-700 font-bold mb-2">Сообщение:</label>
+    <textarea id="messageInput" rows="4" class="w-full px-4 py-2 border rounded mb-4" placeholder="Введите сообщение"></textarea>
+    <button id="sendMessageBtn" class="bg-blue-500 text-white px-4 py-2 rounded w-full">Отправить</button>
+  </div>
+</div>
+
+
+
+    <script src="https://kit.fontawesome.com/5ac26fc84a.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.min.css">
+    
+
+
+    {% comment %} медия {% endcomment %}
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const chatToggle = document.createElement("button");
+            chatToggle.className = "chat-toggle";
+            chatToggle.innerHTML = "💬";
+            document.body.appendChild(chatToggle);
+        
+            const chatBox = document.querySelector(".fixed.bottom-4.right-4"); // Чат-контейнер
+            chatBox.classList.add("chat-box");
+        
+            chatToggle.addEventListener("click", function () {
+                chatBox.classList.toggle("active");
+            });
+        });
+        
+
+    </script>
+    <script>
+        $(document).ready(function(){
+            $("#date").datepicker({ dateFormat: "yy-mm-dd" });
+        });
+    </script>
+    
+
+     <!-- Скрипт для чата -->
+  <script>
+    // Получаем shopUrl из контекста (переменная shop должна быть передана в шаблон)
+    const shopUrl = "{{ shop.website_url }}";
+    const messagesContainer = document.getElementById('messages');
+    const unansweredBtn = document.getElementById('unanswered');
+    const userIdInput = document.getElementById('userIdInput');
+    const messageInput = document.getElementById('messageInput');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    const unreadMessagesBadge = document.getElementById('unreadMessagesCount');
+    
+    let showUnanswered = false;
+    let selectedMessageId = null;
+    
+    // Получение CSRF-токена
+    function getCSRFToken() {
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith('csrftoken=')) {
+          return cookie.substring('csrftoken='.length);
+        }
+      }
+      return null;
+    }
+    const csrfToken = getCSRFToken();
+    
+    // Функция для загрузки сообщений
+    async function fetchMessages() {
+      // Формируем URL с учетом префикса "chat/"
+      const url = `/chat/${shopUrl}/messages/?unanswered=${showUnanswered}`;
+      console.log('Fetching messages from:', url);
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Ошибка загрузки сообщений: ${response.statusText}`);
+        const messages = await response.json();
+        console.log('Messages received:', messages);
+        messagesContainer.innerHTML = messages.map(msg => `
+          <div class="p-2 ${msg.is_admin ? 'text-right' : 'text-left'}">
+            <p class="p-2 rounded ${msg.is_admin ? 'bg-blue-100' : 'bg-gray-200'}">
+              <strong>${msg.is_admin ? 'Admin' : msg.user_id}</strong>: ${msg.message}
+            </p>
+            <small class="text-gray-500">${new Date(msg.timestamp).toLocaleString()}</small>
+            ${msg.is_admin ? '' : `<button class="text-blue-500 underline reply-btn" data-id="${msg.id}" data-user="${msg.user_id}">Ответить</button>`}
+          </div>
+        `).join('');
+        document.querySelectorAll('.reply-btn').forEach(button => {
+          button.addEventListener('click', (event) => {
+            selectedMessageId = event.target.dataset.id;
+            userIdInput.value = event.target.dataset.user;
+            messageInput.focus();
+          });
+        });
+      } catch (error) {
+        console.error('Ошибка при загрузке сообщений:', error);
+      }
+    }
+  
+    
+
+
+// Получаем элементы
+const unreadMessagesBadge = document.getElementById('unreadMessagesCount');
+
+// Изначально скрываем, если там "0"
+if (unreadMessagesBadge.textContent.trim() === "0") {
+    unreadMessagesBadge.classList.add('hidden');
+}
+
+
+
+async function fetchUnreadCount() {
+  const url = `/chat/${shopUrl}/unread_count/`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Ошибка получения количества сообщений");
+
+    const data = await response.json();
+    const unreadCount = data.unread_count;
+
+    const unreadMessagesBadge = document.getElementById("unreadMessagesCount");
+
+    if (unreadCount > 0) {
+      unreadMessagesBadge.textContent = unreadCount;
+      unreadMessagesBadge.classList.remove("hidden"); // Показываем
+    } else {
+      unreadMessagesBadge.classList.add("hidden"); // Прячем если 0
+      unreadMessagesBadge.textContent = "";
+    }
+  } catch (error) {
+    console.error("Ошибка при получении количества непрочитанных сообщений:", error);
+  }
+}
+
+
+// Обновляем при загрузке страницы
+fetchUnreadCount();
+
+// Автообновление каждые 10 секунд
+setInterval(fetchUnreadCount, 10000);
+
+
+
+
+
+  
+    
+    // Отправка сообщения
+    sendMessageBtn.addEventListener('click', async () => {
+      const recipientId = userIdInput.value.trim();
+      const message = messageInput.value.trim();
+      if (!recipientId || !message) {
+        alert('Пожалуйста, заполните все поля.');
+        return;
+      }
+      const payload = {
+        user_id: recipientId,
+        message: message,
+        is_admin: true,
+        replied_to: selectedMessageId || null,
+      };
+      try {
+        const response = await fetch(`/chat/${shopUrl}/messages/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+          },
+          body: JSON.stringify(payload),
+        });
+        if (response.ok) {
+          alert('Сообщение успешно отправлено!');
+          userIdInput.value = '';
+          messageInput.value = '';
+          selectedMessageId = null;
+          fetchMessages();
+          fetchUnreadCount();
+        } else {
+          const error = await response.json();
+          alert(`Ошибка: ${error.message || 'Не удалось отправить сообщение.'}`);
+        }
+      } catch (error) {
+        console.error('Ошибка при отправке сообщения:', error);
+      }
+    });
+    
+    // Периодическое обновление сообщений и счётчика
+    setInterval(() => {
+      fetchMessages();
+      fetchUnreadCount();
+    }, 10000);
+    
+    // Обновление сообщений при клике на кнопку "Показать неотвеченные / Показать отвеченные"
+    unansweredBtn.addEventListener('click', () => {
+        showUnanswered = !showUnanswered; // Переключаем состояние
+        fetchMessages(); // Обновляем сообщения
+    
+        // Меняем текст кнопки в зависимости от состояния
+        unansweredBtn.textContent = showUnanswered ? "Показать отвеченные" : "Показать неотвеченные";
+    });
+  
+    // Инициализация загрузки данных
+    fetchMessages();
+    fetchUnreadCount();
+  </script>
+</body>
+
+{% endblock %}
